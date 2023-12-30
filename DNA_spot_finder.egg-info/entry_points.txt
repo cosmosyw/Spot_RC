@@ -1,0 +1,2 @@
+[console_scripts]
+DNA_spot_finder = DNA_spot_finder.DNA_spot_finder:DNA_spot_finder
