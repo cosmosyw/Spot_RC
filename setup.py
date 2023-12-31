@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='DNA_spot_finder',
+    name='SpotDNA',
     version='0.1',
     description="DNA MERFISH spot finder",
     author="Cosmos Wang",
@@ -9,7 +9,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'DNA_spot_finder = DNA_spot_finder.DNA_spot_finder:DNA_spot_finder'
+            'SpotDNA = SpotDNA.SpotDNA:SpotDNA'
         ]
     },
 )

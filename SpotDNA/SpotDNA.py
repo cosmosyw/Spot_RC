@@ -55,7 +55,7 @@ def load_color_info(color_info_file, round_name, channels_for_FISH=channels_for_
                 color_dict[col] = df_round.loc[0, col]
     return color_dict
 
-def DNA_spot_finder():
+def SpotDNA():
     parser = build_parser()
 
     args, argv = parser.parse_known_args()
