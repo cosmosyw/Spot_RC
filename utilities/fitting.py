@@ -66,7 +66,7 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
     
     # generate map
     _local_maximum_mask = (_max_ft & _min_ft).astype(bool)
-    _diff_ft = (_max_im.astype(np.float32) - _min_im.astype(np.float32))
+    _diff_ft = (_max_im.astype(float) - _min_im.astype(float))
     
     # clear RAM immediately
     del(_max_im, _min_im)
@@ -100,7 +100,7 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
    
     # truncate with max_num_seeds
     if max_num_seeds is not None and max_num_seeds > 0 and max_num_seeds <= len(_final_coords):
-        _final_coords = _final_coords[:np.int(max_num_seeds)]
+        _final_coords = _final_coords[:int(max_num_seeds)]
     
     return _final_coords
 
@@ -112,8 +112,8 @@ class GaussianFit():
         self.max_w = max_w*max_w
         
         self.delta_center = delta_center
-        self.im = np.array(im,dtype=np.float32)
-        self.x,self.y,self.z = np.array(X,dtype=np.float32)
+        self.im = np.array(im,dtype=float)
+        self.x,self.y,self.z = np.array(X,dtype=float)
         #get estimates
         argsort_im = np.argsort(im)
         if center is None:
@@ -125,7 +125,7 @@ class GaussianFit():
         h_guess = np.log(np.max([np.mean(sorted_im[-n_aprox:]),eps]))
         wsq = init_w**2
         wg = np.log((self.max_w - wsq)/(wsq-self.min_w))
-        self.p_ = np.array([bk_guess,h_guess,0,0,0,wg,wg,wg,0,0],dtype=np.float32)
+        self.p_ = np.array([bk_guess,h_guess,0,0,0,wg,wg,wg,0,0],dtype=float)
         self.to_natural_paramaters()
         self.success = False
 
@@ -197,7 +197,7 @@ class GaussianFit():
         xc,yc,zc = self.to_center(xp,yp,zp)
         eps = self.calc_eps(parms)
         eps = np.mean(np.abs(eps))
-        self.p = np.array([hf,xc,yc,zc,bkf,w1f,w2f,w3f,t,p,eps],dtype=np.float32)
+        self.p = np.array([hf,xc,yc,zc,bkf,w1f,w2f,w3f,t,p,eps],dtype=float)
         return self.p
     def calc_f(self,parms):
         self.p_ = parms
@@ -255,7 +255,7 @@ class GaussianFit():
                 converged = converged and self.angle_conv(t1,t2) and self.angle_conv(p1,p2)
                 if converged:
                     self.converged = True
-                    return np.zeros(len(self.im),dtype=np.float32)
+                    return np.zeros(len(self.im),dtype=float)
         else:
             self.p_old = self.to_natural_paramaters(parms)
             self.parms_old = parms
@@ -305,7 +305,7 @@ class GaussianFit():
         norm_t = e_t/(1+e_t*e_t)
         f10 = f2*((pc2 *s1 - s2 +  p2*s3)*(t *tc*(yt2 - xt2) - (t2 - tc2)*xtyt) + p* pc *(s1 - s3)* (t *xtzt - tc*ytzt))*norm_t
         
-        self.jac = np.array([f1,f2,f3,f4,f5,f6,f7,f8,f9,f10],np.float32).T
+        self.jac = np.array([f1,f2,f3,f4,f5,f6,f7,f8,f9,f10],float).T
         
         return self.jac
 
