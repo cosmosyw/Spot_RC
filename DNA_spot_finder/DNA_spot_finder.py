@@ -73,6 +73,10 @@ def DNA_spot_finder():
         for fl, _round in zip(image_files, image_rounds):
             if not os.path.exists(fl):
                 raise ValueError(f'Missing image file at round {_round}')
+        print(f'START analyzing fov {args.fov} in rounds', end=': ')
+        for _round in image_rounds:
+            print(_round, end=', ')
+        print('\n')
     ### TO DO: write code for new naming scheme
     else:
         raise Exception('New naming scheme needs to be written')
