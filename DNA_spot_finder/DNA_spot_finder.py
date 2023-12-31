@@ -68,7 +68,7 @@ def DNA_spot_finder():
             raise ValueError(f'Missing reference round in data folder')
         # generate image files, temporary
         image_file_name = conventional_image_prefix+str(args.fov).zfill(3)+'.dax'
-        _image_files = np.array([os.path.join(args.data_folder, _round_name, image_file_name) for _round_name in image_rounds])
+        _image_files = np.array([os.path.join(args.data_folder, _round_name, image_file_name) for _round_name in _image_rounds])
         # check image files
         image_rounds = []
         image_files = []
