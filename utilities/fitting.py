@@ -390,8 +390,7 @@ class iter_fit_seed_points():
             self.centers_fit = []
             self.success=[]
             self.centers_tree = KDTree(self.centers)
-            from tqdm import tqdm_notebook as tqdm
-            #centers_ = tqdm(self.centers)
+        
             centers_ = self.centers
             self.gparms = []
             for ic,(zc,xc,yc) in enumerate(centers_):
