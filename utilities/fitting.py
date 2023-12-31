@@ -17,7 +17,7 @@ def remove_edge_points(im, T_seeds, distance=2):
         _f = ((_seed >= distance) * (_seed <= im_size-distance)).all()
         flags.append(_f)
     
-    return np.array(flags, dtype=np.bool)
+    return np.array(flags, dtype=bool)
 
 # integrated function to get seeds
 def get_seeds(im, max_num_seeds=None, th_seed=1000, 
@@ -55,17 +55,17 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
         _max_im = np.array(gaussian_filter(im, gfilt_size), dtype=im.dtype)
     else:
         _max_im = np.array(im, dtype=im.dtype)
-    _max_ft = np.array(maximum_filter(_max_im, int(filt_size)) == _max_im, dtype=np.bool)
+    _max_ft = np.array(maximum_filter(_max_im, int(filt_size)) == _max_im, dtype=bool)
 
     # background filter
     if background_gfilt_size:
         _min_im = np.array(gaussian_filter(im, background_gfilt_size), dtype=im.dtype)
     else:
         _min_im = np.array(im, dtype=im.dtype)
-    _min_ft = np.array(minimum_filter(_min_im, int(filt_size)) != _min_im, dtype=np.bool)
+    _min_ft = np.array(minimum_filter(_min_im, int(filt_size)) != _min_im, dtype=bool)
     
     # generate map
-    _local_maximum_mask = (_max_ft & _min_ft).astype(np.bool)
+    _local_maximum_mask = (_max_ft & _min_ft).astype(bool)
     _diff_ft = (_max_im.astype(np.float32) - _min_im.astype(np.float32))
     
     # clear RAM immediately
