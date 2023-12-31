@@ -44,14 +44,14 @@ def build_parser():
 
     return parser
 
-def load_color_info(color_info_file, round_name):
+def load_color_info(color_info_file, round_name, channels_for_FISH=channels_for_FISH):
     color_dict = {}
     df_color = pd.read_csv(color_info_file)
     df_round = df_color[df_color['Hyb']==round_name].copy()
     df_round.reset_index(inplace=True, drop=True)
     for col in df_round.columns:
         if col in channels_for_FISH:
-            if df_round.loc[0, col] is not None:
+            if not pd.isnull(df_round.loc[0, col]):
                 color_dict[col] = df_round.loc[0, col]
     return color_dict
 
