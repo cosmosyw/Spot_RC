@@ -98,10 +98,11 @@ def DNA_spot_finder():
     fiducial_channel = args.fiducial_channel
     # check whether the fiducial image has already exists
     ref_fiducial_image = None
-    with h5py.File(output_file, 'r+') as hdf_file:
-        if 'reference_fiducial_image' in hdf_file:
-            ref_fiducial_image = hdf_file['reference_fiducial_image'][:]
-            print('---Read reference fiducial image directly from hdf5')
+    if os.path.exists(output_file) and (not args.overwrite):
+        with h5py.File(output_file, 'r+') as hdf_file:
+            if 'reference_fiducial_image' in hdf_file:
+                ref_fiducial_image = hdf_file['reference_fiducial_image'][:]
+                print('---Read reference fiducial image directly from hdf5')
     # when ref fiducial image is not loaded
     if ref_fiducial_image is None:
         ref_im_file = image_files[image_rounds==args.ref_round][0]
