@@ -62,17 +62,20 @@ def DNA_spot_finder():
     
     ### define image file
     if args.use_new_name is False:
-        image_rounds = np.array([_round for _round in os.listdir(args.data_folder) if _round[0]=='H']) # TO DO add sanity check for folder validity)
+        _image_rounds = np.array([_round for _round in os.listdir(args.data_folder) if _round[0]=='H']) # TO DO add sanity check for folder validity)
         # check reference round
-        if args.ref_round not in image_rounds:
+        if args.ref_round not in _image_rounds:
             raise ValueError(f'Missing reference round in data folder')
-        # generate image files
+        # generate image files, temporary
         image_file_name = conventional_image_prefix+str(args.fov).zfill(3)+'.dax'
-        image_files = np.array([os.path.join(args.data_folder, _round_name, image_file_name) for _round_name in image_rounds])
+        _image_files = np.array([os.path.join(args.data_folder, _round_name, image_file_name) for _round_name in image_rounds])
         # check image files
-        for fl, _round in zip(image_files, image_rounds):
-            if not os.path.exists(fl):
-                raise ValueError(f'Missing image file at round {_round}')
+        image_rounds = []
+        image_files = []
+        for fl, _round in zip(_image_files, _image_rounds):
+            if os.path.exists(fl):
+                image_rounds.append(_round)
+                image_files.append(fl)
         print(f'START analyzing fov {args.fov} in rounds', end=': ')
         for _round in image_rounds:
             print(_round, end=', ')
