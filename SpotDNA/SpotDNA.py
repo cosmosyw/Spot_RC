@@ -126,6 +126,7 @@ def SpotDNA():
             hdf_file.create_dataset('DNA_DAPI_image', 
                                     data=getattr(ref_dax, f'im_{args.dapi_channel}'))
         print('---Finish saving reference fiducial and DAPI image\n')
+        del ref_dax
 
     ### load parameters for picking
     parameters = pickle.load(open(args.parameter_file, 'rb'))
@@ -142,19 +143,14 @@ def SpotDNA():
         ### load and correct image
         print(f'-Start analyzing images for round {round_name}')
         if round_name == args.ref_round:
-            if ref_dax in locals():
-                # directly load from reference dax
-                dax_cls = ref_dax
-            else:
-                print(f'---Load image from file {image_file}')
-                dax_cls = dax.Dax_Processor(image_file, channels_for_FISH+[fiducial_channel, args.dapi_channel], imageSize, correction_dict)
-                dax_cls.load_image()
-                dax_cls.correct_image()
+            # load dapi channel for reference round
+            load_channels = channels_for_FISH+[fiducial_channel, args.dapi_channel]
         else:
-            print(f'---Load image from file {image_file}')
-            dax_cls = dax.Dax_Processor(image_file, channels_for_FISH+[fiducial_channel], imageSize, correction_dict)
-            dax_cls.load_image()
-            dax_cls.correct_image()
+            load_channels = channels_for_FISH+[fiducial_channel]
+        print(f'---Load image from file {image_file}')
+        dax_cls = dax.Dax_Processor(image_file, load_channels, imageSize, correction_dict)
+        dax_cls.load_image()
+        dax_cls.correct_image()
         print(f'---Finish image correction for round {round_name}')
         
         ### calculate drift
@@ -218,10 +214,6 @@ def SpotDNA():
                 bit_info.create_dataset('spots', data=spots)
                 print(f"---Spots for bit {bit} stored in hdf5 file")
             
-        # release RAM for reference image
-        if (round_name == args.ref_round) and (ref_dax in locals()):
-            del ref_dax
-        
         print(f'-Finish analyzing images for round {round_name}.\n')
     
     return
