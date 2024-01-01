@@ -69,11 +69,11 @@ def SpotDNA():
         # generate image files, temporary
         image_file_name = conventional_image_prefix+str(args.fov).zfill(3)+'.dax'
         _image_files = np.array([os.path.join(args.data_folder, _round_name, image_file_name) for _round_name in _image_rounds])
-        # check image files
-        image_rounds = []
-        image_files = []
+        # check image files and start processing from the reference round
+        image_rounds = [args.ref_round]
+        image_files = [os.path.join(args.data_folder, args.ref_round, image_file_name)]
         for fl, _round in zip(_image_files, _image_rounds):
-            if os.path.exists(fl):
+            if (os.path.exists(fl)) and (_round not in image_rounds):
                 image_rounds.append(_round)
                 image_files.append(fl)
         print(f'START analyzing fov {args.fov} in rounds', end=': ')

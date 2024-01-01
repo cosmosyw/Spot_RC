@@ -328,7 +328,7 @@ class GaussianFit():
             self.eps_frac,self.eps_dist,self.eps_angle = eps_frac,eps_dist,eps_angle
             parms0 = self.p_
             self.p_old = None
-            parmsf,_ = leastsq(self.calc_eps,parms0,Dfun=self.calc_jac, maxfev=1000) # changed maxfev to block warning message
+            parmsf,_ = leastsq(self.calc_eps,parms0,Dfun=self.calc_jac, maxfev=5000) # changed maxfev to block warning message
             #parmsf=parms0#####pisici
             self.p_ = parmsf
             self.to_natural_paramaters()
@@ -382,6 +382,7 @@ class iter_fit_seed_points():
         """
         Perform a first fit on the sample with the gaussian constrained close to the local maximum
         """
+        print('-----Start first round of fitting')
         if len(self.centers)>0:
             #fit the points in order of brightness and at each fit subtract the fitted signal
             self.ps = []
@@ -427,10 +428,13 @@ class iter_fit_seed_points():
                     self.centers_fit.append([np.nan]*3)
                 
         self.im_add = np.array(self.im_subtr)
+        print('-----Finish first round of fitting')
         
     def repeatfit(self):
-        self.n_iter = 0
+        print('-----Start iterative rounds of fitting')
         
+        self.n_iter = 0
+        num_seeds = len(self.centers)
         self.converged = np.zeros(len(self.centers),dtype=bool)
         self.dists = np.zeros(len(self.centers))+np.inf
         converged = np.all(self.converged)
@@ -471,4 +475,5 @@ class iter_fit_seed_points():
             converged = np.all(self.converged)
             self.n_iter+=1
             converged = converged or (self.n_iter>self.n_max_iter)
-          
+        
+        print('-----Finish iterative rounds of fitting.')
