@@ -76,10 +76,10 @@ def SpotDNA():
             if (os.path.exists(fl)) and (_round not in image_rounds):
                 image_rounds.append(_round)
                 image_files.append(fl)
-        print(f'START analyzing fov {args.fov} in rounds', end=': ')
+        print(f'START analyzing fov {args.fov} in rounds', end=': ', flush=True)
         for _round in image_rounds:
-            print(_round, end=', ')
-        print('\n')
+            print(_round, end=', ', flush=True)
+        print('\n', flush=True)
         # change the format into array
         image_rounds = np.array(image_rounds)
         image_files = np.array(image_files)
@@ -104,7 +104,7 @@ def SpotDNA():
     correction_dict = pickle.load(open(args.correction_file, 'rb'))
     
     ### load reference image and store
-    print('-Start loading reference fiducial and DAPI image')
+    print('-Start loading reference fiducial and DAPI image', flush=True)
     fiducial_channel = args.fiducial_channel
     # check whether the fiducial image has already exists
     ref_fiducial_image = None
@@ -112,7 +112,7 @@ def SpotDNA():
         with h5py.File(output_file, 'r+') as hdf_file:
             if 'reference_fiducial_image' in hdf_file:
                 ref_fiducial_image = hdf_file['reference_fiducial_image'][:]
-                print('---Read reference fiducial image directly from hdf5')
+                print('---Read reference fiducial image directly from hdf5', flush=True)
     # when ref fiducial image is not loaded
     if ref_fiducial_image is None:
         ref_im_file = image_files[image_rounds==args.ref_round][0]
@@ -128,7 +128,7 @@ def SpotDNA():
                                     data=getattr(ref_dax, f'im_{fiducial_channel}'))
             hdf_file.create_dataset('DNA_DAPI_image', 
                                     data=getattr(ref_dax, f'im_{args.dapi_channel}'))
-        print('---Finish saving reference fiducial and DAPI image\n')
+        print('---Finish saving reference fiducial and DAPI image\n', flush=True)
         del ref_dax
 
     ### load parameters for picking
@@ -144,32 +144,32 @@ def SpotDNA():
             raise ValueError(f'Missing color usage information for round {round_name}')
         
         ### load and correct image
-        print(f'-Start analyzing images for round {round_name}')
+        print(f'-Start analyzing images for round {round_name}', flush=True)
         if round_name == args.ref_round:
             # load dapi channel for reference round
             load_channels = channels_for_FISH+[fiducial_channel, args.dapi_channel]
         else:
             load_channels = channels_for_FISH+[fiducial_channel]
-        print(f'---Load image from file {image_file}')
+        print(f'---Load image from file {image_file}', flush=True)
         dax_cls = dax.Dax_Processor(image_file, load_channels, imageSize, correction_dict)
         dax_cls.load_image()
         dax_cls.correct_image()
-        print(f'---Finish image correction for round {round_name}')
+        print(f'---Finish image correction for round {round_name}', flush=True)
         
         ### calculate drift
         # load and correct fiducial images
         fiducial_image = getattr(dax_cls, f'im_{fiducial_channel}')
         # calculate
         if round_name!=args.ref_round:
-            print(f'---Calculate drift for round {round_name}')
+            print(f'---Calculate drift for round {round_name}', flush=True)
             drift, drift_flag = alignment.align_image(fiducial_image, ref_fiducial_image)
-            print(f'---Drift for round {round_name} calculated with {drift_flag}')
+            print(f'---Drift for round {round_name} calculated with {drift_flag}', flush=True)
         else:
-            print(f'---No drift calculation for reference round')
+            print(f'---No drift calculation for reference round', flush=True)
             drift, drift_flag = [0,0,0], 'Reference image'
 
         #### start spot finding
-        print(f'---Start spot finding for round {round_name}')
+        print(f'---Start spot finding for round {round_name}', flush=True)
         for color, bit in color_usage.items():
             ### check whether the bit information exists
             if args.overwrite==False:
@@ -177,7 +177,7 @@ def SpotDNA():
                     if bit in hdf_file:
                         bit_info = hdf_file[bit]
                         if ('drift' in bit_info) and ('spots' in bit_info):
-                            print(f'---Spot information for bit {bit} already exists.')
+                            print(f'---Spot information for bit {bit} already exists.', flush=True)
                             continue
 
             ### use color to find images: 
@@ -187,7 +187,7 @@ def SpotDNA():
             seeds = fitting.get_seeds(im, max_num_seeds=parameters['max_num_seed'], 
                                       th_seed=parameters['seed_threshold'][color], 
                                       min_dynamic_seeds=parameters['min_num_seed'])
-            print(f"-----{len(seeds)} seeded with th={parameters['seed_threshold'][color]} in channel {color} for round {round_name}")
+            print(f"-----{len(seeds)} seeded with th={parameters['seed_threshold'][color]} in channel {color} for round {round_name}", flush=True)
             ### fitting
             fitter = fitting.iter_fit_seed_points(im, seeds.T)    
             # fit
@@ -201,7 +201,7 @@ def SpotDNA():
             _kept_flags = (spots[:,1:4] > np.zeros(3)).all(1) \
                 * (spots[:, 1:4] < np.array(np.shape(im))).all(1)
             spots = spots[np.where(_kept_flags)[0]]
-            print(f"-----{len(spots)} found in channel {color} in round {round_name}")
+            print(f"-----{len(spots)} found in channel {color} in round {round_name}", flush=True)
             
             ### shift the spots
             spots = alignment.shift_spots(spots, drift)
@@ -215,8 +215,8 @@ def SpotDNA():
                 bit_info.create_dataset('drift', data=drift)
                 bit_info.create_dataset('drift_flag', data=drift_flag)
                 bit_info.create_dataset('spots', data=spots)
-                print(f"---Spots for bit {bit} stored in hdf5 file")
+                print(f"---Spots for bit {bit} stored in hdf5 file", flush=True)
             
-        print(f'-Finish analyzing images for round {round_name}.\n')
+        print(f'-Finish analyzing images for round {round_name}.\n', flush=True)
     
     return

@@ -8,7 +8,8 @@ class Dax_Processor():
                  imageFileName,
                  channels,
                  imageSize,
-                 correction_dict
+                 correction_dict,
+                 verbose=False
                  ):
         """
         imageFileName: dax file name
@@ -31,6 +32,7 @@ class Dax_Processor():
             raise ValueError('Need to input channels')
         self.image_size = imageSize
         self.correction_dict = correction_dict
+        self.verbose = verbose
     
     def load_image(self):
         ### load image
@@ -68,7 +70,8 @@ class Dax_Processor():
                 im = getattr(self, f'im_{ch}')
                 corrected_im = correct_hotpixels(im)
                 setattr(self, f'im_{ch}', corrected_im)
-                print(f'-----Finished hot pixel correction for channel {ch}')
+                if self.verbose:
+                    print(f'-----Finished hot pixel correction for channel {ch}')
 
         # correct illumination
         if 'illumination' in self.correction_dict.keys():
@@ -78,7 +81,8 @@ class Dax_Processor():
                     im = getattr(self, f'im_{ch}')
                     corrected_im = correct_illumination(im, illumination_dict[ch])
                     setattr(self, f'im_{ch}', corrected_im)
-                    print(f'-----Finished illumination correction for channel {ch}')
+                    if self.verbose:
+                        print(f'-----Finished illumination correction for channel {ch}')
         
         # bleed through correction
         if 'bleedthrough' in self.correction_dict.keys():
@@ -95,7 +99,8 @@ class Dax_Processor():
                 # update
                 for i, ch in enumerate(corrected_channels):
                     setattr(self, f'im_{ch}', corrected_ims[i])
-                print(f'-----Finished bleedthrough corrections')
+                if self.verbose:
+                    print(f'-----Finished bleedthrough corrections')
 
         # chromatic correction
         if 'chromatic' in self.correction_dict.keys():
@@ -105,5 +110,6 @@ class Dax_Processor():
                     im = getattr(self, f'im_{ch}')
                     warped_im = correct_chromatic_aberration(im, chromatic_dict[ch])
                     setattr(self, f'im_{ch}', warped_im)
-                    print(f'-----Finished chromatic aberration correction for channel {ch}')
+                    if self.verbose:
+                        print(f'-----Finished chromatic aberration correction for channel {ch}')
         return

@@ -391,7 +391,7 @@ class iter_fit_seed_points():
         """
         Perform a first fit on the sample with the gaussian constrained close to the local maximum
         """
-        print('-----Start first round of fitting')
+        
         if len(self.centers)>0:
             #fit the points in order of brightness and at each fit subtract the fitted signal
             self.ps = []
@@ -436,12 +436,10 @@ class iter_fit_seed_points():
                     self.ps.append([np.nan]*n_p)
                     self.centers_fit.append([np.nan]*3)
                 
-        self.im_add = np.array(self.im_subtr)
-        print('-----Finish first round of fitting')
+        self.im_add = np.array(self.im_subtr)       
         
     def repeatfit(self):
-        print('-----Start iterative rounds of fitting')
-        
+             
         self.n_iter = 0
         num_seeds = len(self.centers)
         self.converged = np.zeros(len(self.centers),dtype=bool)
@@ -485,4 +483,3 @@ class iter_fit_seed_points():
             self.n_iter+=1
             converged = converged or (self.n_iter>self.n_max_iter)
         
-        print('-----Finish iterative rounds of fitting.')
