@@ -2,7 +2,7 @@
 #SBATCH -e /n/holyscratch01/zhuang_lab/Users/cosmosyw/DNA_MERFISH/Mecp2_1201_DNA_analysis/Logs/slurm-%j.err
 #SBATCH -o /n/holyscratch01/zhuang_lab/Users/cosmosyw/DNA_MERFISH/Mecp2_1201_DNA_analysis/Logs/slurm-%j.out
 
-conda activate spot_finder
+source activate spot_finder
 
 sbatch -p zhuang -c 1 --mem 32000 -t 2-12 --wrap="SpotDNA -d /n/holyscratch01/zhuang_lab/Users/cosmosyw/DNA_MERFISH/20231221_Ma_DNA_from_1201/ -o /n/holyscratch01/zhuang_lab/Users/cosmosyw/DNA_MERFISH/Mecp2_1201_DNA_analysis/ --ref H0C1 -p /n/holylfs04/LABS/zhuang_lab/Users/cosmosyw/Spot_finder_files/picking_parameter_dict.pkl -c /n/holylfs04/LABS/zhuang_lab/Users/cosmosyw/Spot_finder_files/correction_dict_RC.pkl --fov 0" -o /n/holyscratch01/zhuang_lab/Users/cosmosyw/DNA_MERFISH/Mecp2_1201_DNA_analysis/Logs/SpotDNA_fov_000_output.txt
 sleep 1
