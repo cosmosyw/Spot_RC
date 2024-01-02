@@ -1,1 +1,1 @@
-python spot_finding.py -d W:\20220819_Mecp2_DNA_from_0809 -o W:\20220819_Mecp2_DNA_from_0809\Analysis --fov 5 --ref H0C1 -p  C:\Users\cosmosyw\Documents\Softwares\Spot_RC\test\picking_parameter_dict.pkl -c C:\Users\cosmosyw\Documents\Softwares\Spot_RC\test\correction_dict_local.pkl
+SpotDNA -d T:\20231221_Ma_DNA_from_1201 -o E:\example_output --ref H0C1 -p  C:\Users\cosmosyw\Documents\Softwares\Spot_RC\test\picking_parameter_dict.pkl -c C:\Users\cosmosyw\Documents\Softwares\Spot_RC\test\correction_dict_local.pkl --fov 5

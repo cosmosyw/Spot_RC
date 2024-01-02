@@ -24,7 +24,7 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
               gfilt_size=0.75, background_gfilt_size=7.5,
               filt_size=3, min_edge_distance=2,
               use_dynamic_th=True, dynamic_niters=10, min_dynamic_seeds=100,
-              minimum_threshold = 100):
+              minimum_threshold = 100, remove_hot_pixel=True, hot_pixel_th=5):
     """Function to fully get seeding pixels given a image and thresholds.
     Inputs:
       im: image given, np.ndarray, 
@@ -90,7 +90,15 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
         # if got enough seeds, proceed.
         if len(_coords[0]) >= min_dynamic_seeds:
             break
-        
+    # hot pixels
+    if remove_hot_pixel:
+        _,_x,_y = _coords
+        _xy_str = [str([np.round(x_,1),np.round(y_,1)]) 
+                    for x_,y_ in zip(_x,_y)]
+        _unique_xy_str, _cts = np.unique(_xy_str, return_counts=True)
+        _keep_hot = np.array([_xy not in _unique_xy_str[_cts>=hot_pixel_th] 
+                             for _xy in _xy_str],dtype=bool)
+        _coords = tuple(_cs[_keep_hot] for _cs in _coords)
     # get heights
     _hs = _diff_ft[_coords]
     _final_coords = np.array(_coords) + _local_edges[:, np.newaxis] # adjust to absolute coordinates
@@ -101,6 +109,7 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
     # truncate with max_num_seeds
     if max_num_seeds is not None and max_num_seeds > 0 and max_num_seeds <= len(_final_coords):
         _final_coords = _final_coords[:int(max_num_seeds)]
+        print(f"--- {max_num_seeds} seeds are kept.")
     
     return _final_coords
 
@@ -112,8 +121,8 @@ class GaussianFit():
         self.max_w = max_w*max_w
         
         self.delta_center = delta_center
-        self.im = np.array(im,dtype=float)
-        self.x,self.y,self.z = np.array(X,dtype=float)
+        self.im = np.array(im,dtype=np.float32)
+        self.x,self.y,self.z = np.array(X,dtype=np.float32)
         #get estimates
         argsort_im = np.argsort(im)
         if center is None:
@@ -125,7 +134,7 @@ class GaussianFit():
         h_guess = np.log(np.max([np.mean(sorted_im[-n_aprox:]),eps]))
         wsq = init_w**2
         wg = np.log((self.max_w - wsq)/(wsq-self.min_w))
-        self.p_ = np.array([bk_guess,h_guess,0,0,0,wg,wg,wg,0,0],dtype=float)
+        self.p_ = np.array([bk_guess,h_guess,0,0,0,wg,wg,wg,0,0],dtype=np.float32)
         self.to_natural_paramaters()
         self.success = False
 
@@ -197,7 +206,7 @@ class GaussianFit():
         xc,yc,zc = self.to_center(xp,yp,zp)
         eps = self.calc_eps(parms)
         eps = np.mean(np.abs(eps))
-        self.p = np.array([hf,xc,yc,zc,bkf,w1f,w2f,w3f,t,p,eps],dtype=float)
+        self.p = np.array([hf,xc,yc,zc,bkf,w1f,w2f,w3f,t,p,eps],dtype=np.float32)
         return self.p
     def calc_f(self,parms):
         self.p_ = parms
@@ -387,7 +396,7 @@ class iter_fit_seed_points():
             #fit the points in order of brightness and at each fit subtract the fitted signal
             self.ps = []
             self.ims_rec=[]
-            self.im_subtr = np.array(self.im,dtype=float)
+            self.im_subtr = np.array(self.im,dtype=np.float32)
             self.centers_fit = []
             self.success=[]
             self.centers_tree = KDTree(self.centers)
