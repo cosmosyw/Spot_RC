@@ -80,6 +80,9 @@ def SpotDNA():
         for _round in image_rounds:
             print(_round, end=', ')
         print('\n')
+        # change the format into array
+        image_rounds = np.array(image_rounds)
+        image_files = np.array(image_files)
     ### TO DO: write code for new naming scheme
     else:
         raise Exception('New naming scheme needs to be written')
