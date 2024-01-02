@@ -328,7 +328,7 @@ class GaussianFit():
             self.eps_frac,self.eps_dist,self.eps_angle = eps_frac,eps_dist,eps_angle
             parms0 = self.p_
             self.p_old = None
-            parmsf,_ = leastsq(self.calc_eps,parms0,Dfun=self.calc_jac, maxfev=5000) # changed maxfev to block warning message
+            parmsf,_ = leastsq(self.calc_eps,parms0,Dfun=self.calc_jac, maxfev=1000) # changed maxfev to block warning message
             #parmsf=parms0#####pisici
             self.p_ = parmsf
             self.to_natural_paramaters()
