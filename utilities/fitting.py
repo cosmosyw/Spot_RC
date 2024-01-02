@@ -24,7 +24,7 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
               gfilt_size=0.75, background_gfilt_size=7.5,
               filt_size=3, min_edge_distance=2,
               use_dynamic_th=True, dynamic_niters=10, min_dynamic_seeds=100,
-              minimum_threshold = 100, remove_hot_pixel=True, hot_pixel_th=5):
+              minimum_threshold = 500, remove_hot_pixel=True, hot_pixel_th=5):
     """Function to fully get seeding pixels given a image and thresholds.
     Inputs:
       im: image given, np.ndarray, 
