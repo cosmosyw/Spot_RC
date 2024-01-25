@@ -1,5 +1,5 @@
 import numpy as np
-from utilities.correction import correct_illumination, correct_hotpixels, correct_chromatic_aberration, correct_bleedthrough
+from .correction import correct_illumination, correct_hotpixels, correct_chromatic_aberration, correct_bleedthrough
 
 class Dax_Processor():
     """Class to process dax images"""
