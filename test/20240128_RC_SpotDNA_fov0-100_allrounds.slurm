@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -e /n/holyscratch01/zhuang_lab/Users/cosmosyw/DNA_MERFISH/Mecp2_1201_DNA_analysis/Logs/slurm-%j.err
 #SBATCH -o /n/holyscratch01/zhuang_lab/Users/cosmosyw/DNA_MERFISH/Mecp2_1201_DNA_analysis/Logs/slurm-%j.out
-#SBATCH -t 4-00:00:00
+#SBATCH -t 2-00:00:00
 #SBATCH -n 1
 #SBATCH -N 1
 #SBATCH -p shared,zhuang
