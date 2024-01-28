@@ -145,7 +145,6 @@ def SpotDNA():
         # check whether the color usage information has already exists
         total_bits  = 0
         analyzed_bits = 0
-        _drift = np.zeros((3,))
         for color, bit in color_usage.items():
             ### check whether the bit information exists
             total_bits += 1
@@ -154,7 +153,7 @@ def SpotDNA():
                     if bit in hdf_file:
                         bit_info = hdf_file[bit]
                         if ('drift' in bit_info) and ('spots' in bit_info):
-                            _drift = bit_info['drift'].copy()
+                            _drift = np.array(bit_info['drift'])
                             analyzed_bits += 1
         if (analyzed_bits!=0) and (analyzed_bits==total_bits):
             print(f'---Spot information for round {round_name} already exists with {_drift}.', flush=True)
