@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 import h5py
 from utilities import dax, fitting, alignment
+import json
 
 conventional_image_prefix = 'Conv_zscan_' # then str(fov).zfill(3)+'.dax'
 channels_for_FISH = ['750', '647', '561']
@@ -21,12 +22,16 @@ def build_parser():
     # the output folder should contain the color usage information
     parser.add_argument('-o', '--analysis-folder', dest='analysis_folder', type=str, required=True,
                         help='Path to the folder storing analyzed result')
+    # DNA segment file
+    parser.add_argument('-s', '--segment', dest='segment_file', type=str, required=True, help='File path to DNA segment')
     # load fov information
     parser.add_argument('--fov', type=int, required=True, help='fov number to be analyzed')
     # load reference round
     parser.add_argument('--ref', dest='ref_round', type=str, required=True, help='The folder name for the reference round')
     # number of z stacks
     parser.add_argument('-z', '--num-z', dest='num_z', type=int, default=50, help='The number of z stacks')
+    # microscope dictionary
+    parser.add_argument('-m', '--microscope', dest='microscope_file', type=str, help='File path to microscope dictionary')
     # overwrite
     parser.add_argument('--overwrite', action='store_true', help='Overwrite the stored analyzed data')
     # load fiducial channel
@@ -103,6 +108,20 @@ def SpotDNA():
     # load correction dictionary
     correction_dict = pickle.load(open(args.correction_file, 'rb'))
     
+    ### load parameters for picking
+    parameters = pickle.load(open(args.parameter_file, 'rb'))
+
+    # load DNA mask and calculate the expected number of pots
+    dna_dapi_mask = np.load(args.segment_file)
+    num_cells = len(np.unique(dna_dapi_mask)) - 1
+    max_num_seed = int(num_cells*parameters['expected_spots_per_cell']*4)
+    min_num_seed = int(num_cells*parameters['expected_spots_per_cell']*2)
+
+    # load microscope parameter dictionary
+    if hasattr(args, 'microscope_file') and args.microscope_file is not None:
+        with open(args.microscope_file, 'r') as file:
+            microscope_dict = json.load(file)
+
     ### load reference image and store
     print('-Start loading reference fiducial and DAPI image', flush=True)
     fiducial_channel = args.fiducial_channel
@@ -118,7 +137,7 @@ def SpotDNA():
         ref_im_file = image_files[image_rounds==args.ref_round][0]
         # load reference image
         ref_image_channel = channels_for_FISH + [fiducial_channel, args.dapi_channel]
-        ref_dax = dax.Dax_Processor(ref_im_file, ref_image_channel, imageSize, correction_dict)
+        ref_dax = dax.Dax_Processor(ref_im_file, ref_image_channel, imageSize, correction_dict, microscope_dict)
         ref_dax.load_image()
         ref_dax.correct_image()
         ref_fiducial_image = getattr(ref_dax, f'im_{fiducial_channel}').copy()
@@ -130,9 +149,6 @@ def SpotDNA():
                                     data=getattr(ref_dax, f'im_{args.dapi_channel}'))
         print('---Finish saving reference fiducial and DAPI image\n', flush=True)
         del ref_dax
-
-    ### load parameters for picking
-    parameters = pickle.load(open(args.parameter_file, 'rb'))
 
     ### iterate through the image files
     for image_file, round_name in zip(image_files, image_rounds):
@@ -153,7 +169,7 @@ def SpotDNA():
                     if bit in hdf_file:
                         bit_info = hdf_file[bit]
                         if ('drift' in bit_info) and ('spots' in bit_info):
-                            _drift = np.array(bit_info['drift'])
+                            _drift = np.array(bit_info['drift_flag'])
                             analyzed_bits += 1
         if (analyzed_bits!=0) and (analyzed_bits==total_bits):
             print(f'---Spot information for round {round_name} already exists with {_drift}.', flush=True)
@@ -167,7 +183,7 @@ def SpotDNA():
         else:
             load_channels = channels_for_FISH+[fiducial_channel]
         print(f'---Load image from file {image_file}', flush=True)
-        dax_cls = dax.Dax_Processor(image_file, load_channels, imageSize, correction_dict)
+        dax_cls = dax.Dax_Processor(image_file, load_channels, imageSize, correction_dict, microscope_dict)
         dax_cls.load_image()
         dax_cls.correct_image()
         print(f'---Finish image correction for round {round_name}', flush=True)
@@ -200,27 +216,31 @@ def SpotDNA():
             im = getattr(dax_cls, f'im_{color}')
             
             ### generate seed
-            seeds = fitting.get_seeds(im, max_num_seeds=parameters['max_num_seed'], 
+            seeds = fitting.get_seeds(im, max_num_seeds=max_num_seed, 
                                       th_seed=parameters['seed_threshold'][color], 
-                                      min_dynamic_seeds=parameters['min_num_seed'])
+                                      min_dynamic_seeds=min_num_seed,
+                                      segment=dna_dapi_mask)
             print(f"-----{len(seeds)} seeded with th={parameters['seed_threshold'][color]} in channel {color} for round {round_name}", flush=True)
-            ### fitting
-            fitter = fitting.iter_fit_seed_points(im, seeds.T)    
-            # fit
-            fitter.firstfit()
-            # check
-            fitter.repeatfit()
-            # get spots
-            spots = np.array(fitter.ps)
-            spots = spots[np.sum(np.isnan(spots),axis=1)==0] # remove NaNs
-            # remove all boundary points
-            _kept_flags = (spots[:,1:4] > np.zeros(3)).all(1) \
-                * (spots[:, 1:4] < np.array(np.shape(im))).all(1)
-            spots = spots[np.where(_kept_flags)[0]]
-            print(f"-----{len(spots)} found in channel {color} in round {round_name}", flush=True)
-            
-            ### shift the spots
-            spots = alignment.shift_spots(spots, drift)
+            if len(seeds)>0:
+                ### fitting
+                fitter = fitting.iter_fit_seed_points(im, seeds.T)    
+                # fit
+                fitter.firstfit()
+                # check
+                fitter.repeatfit()
+                # get spots
+                spots = np.array(fitter.ps)
+                spots = spots[np.sum(np.isnan(spots),axis=1)==0] # remove NaNs
+                # remove all boundary points
+                _kept_flags = (spots[:,1:4] > np.zeros(3)).all(1) \
+                    * (spots[:, 1:4] < np.array(np.shape(im))).all(1)
+                spots = spots[np.where(_kept_flags)[0]]
+                print(f"-----{len(spots)} found in channel {color} in round {round_name}", flush=True)
+                
+                ### shift the spots
+                spots = alignment.shift_spots(spots, drift)
+            else:
+                spots = []
 
             ### store the spots
             with h5py.File(output_file, 'a') as hdf_file:

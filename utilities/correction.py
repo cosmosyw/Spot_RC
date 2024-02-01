@@ -8,7 +8,7 @@ def correct_illumination(im, file_path, rescale=True):
     _dtype = im.dtype
     _min,_max = np.iinfo(_dtype).min, np.iinfo(_dtype).max
     # apply corr
-    im = im.astype(float) / illumination_correction[np.newaxis,:]
+    im = im.astype(np.float32) / illumination_correction[np.newaxis,:]
     if rescale: 
         im = (im - np.min(im)) / (np.max(im) - np.min(im)) * _max + _min
     im = np.clip(im, a_min=_min, a_max=_max)

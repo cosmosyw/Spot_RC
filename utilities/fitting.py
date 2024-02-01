@@ -6,6 +6,7 @@ from pyfftw.interfaces.numpy_fft import rfftn,irfftn
 from scipy import fftpack
 from scipy.spatial import cKDTree as KDTree
 from scipy.optimize import leastsq
+from scipy.ndimage import binary_dilation
 
 # remove edge points
 def remove_edge_points(im, T_seeds, distance=2):
@@ -24,7 +25,8 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
               gfilt_size=0.75, background_gfilt_size=7.5,
               filt_size=3, min_edge_distance=2,
               use_dynamic_th=True, dynamic_niters=10, min_dynamic_seeds=100,
-              minimum_threshold = 500, remove_hot_pixel=True, hot_pixel_th=5):
+              minimum_threshold = 500, remove_hot_pixel=True, hot_pixel_th=5,
+              segment=None):
     """Function to fully get seeding pixels given a image and thresholds.
     Inputs:
       im: image given, np.ndarray, 
@@ -44,7 +46,9 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
     if not isinstance(im, np.ndarray):
         raise TypeError(f"image given should be a numpy.ndarray, but {type(im)} is given.")
     _local_edges = np.zeros(len(np.shape(im)))
-    
+    # return if there is no cell
+    if np.count_nonzero(segment)==0:
+        return []
     ## do seeding
     if not use_dynamic_th:
         dynamic_niters = 1 # setting only do seeding once
@@ -66,6 +70,13 @@ def get_seeds(im, max_num_seeds=None, th_seed=1000,
     
     # generate map
     _local_maximum_mask = (_max_ft & _min_ft).astype(bool)
+    if segment is not None:
+        segment_mask = segment>0
+        dilated_mask = [binary_dilation(ly, structure=np.ones((19,19))) for ly in segment_mask]
+        dilated_mask = np.array(dilated_mask)
+        _local_maximum_mask = _local_maximum_mask*dilated_mask
+        del segment_mask
+        del dilated_mask
     _diff_ft = (_max_im.astype(float) - _min_im.astype(float))
     
     # clear RAM immediately

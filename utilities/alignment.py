@@ -3,6 +3,21 @@ import numpy as np
 from skimage.registration import phase_cross_correlation
 from scipy.spatial.distance import pdist, squareform, euclidean
 
+def correct_image3D_by_microscope_param(image3D:np.ndarray, microscope_params:dict):
+    """Correct 3D image with microscopy parameter"""
+    _image = image3D.copy()
+    if not isinstance(microscope_params, dict):
+        raise TypeError(f"Wrong inputt ype for microscope_params, should be a dict")
+    # transpose
+    if 'transpose' in microscope_params and microscope_params['transpose']:
+        _image = _image.transpose((0,2,1))
+    if 'flip_horizontal' in microscope_params and microscope_params['flip_horizontal']:
+        _image = np.flip(_image, 2)
+    if  'flip_vertical' in microscope_params and microscope_params['flip_vertical']:
+        _image = np.flip(_image, 1)
+    return _image
+
+
 def _find_boundary(_ct, _radius, _im_size):
     _bds = []
     for _c, _sz in zip(_ct, _im_size):

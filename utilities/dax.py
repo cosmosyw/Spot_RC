@@ -1,5 +1,6 @@
 import numpy as np
 from .correction import correct_illumination, correct_hotpixels, correct_chromatic_aberration, correct_bleedthrough
+from .alignment import correct_image3D_by_microscope_param
 
 class Dax_Processor():
     """Class to process dax images"""
@@ -9,6 +10,7 @@ class Dax_Processor():
                  channels,
                  imageSize,
                  correction_dict,
+                 microscope_params = None,
                  verbose=False
                  ):
         """
@@ -32,6 +34,7 @@ class Dax_Processor():
             raise ValueError('Need to input channels')
         self.image_size = imageSize
         self.correction_dict = correction_dict
+        self.microscope_params = microscope_params
         self.verbose = verbose
     
     def load_image(self):
@@ -49,7 +52,6 @@ class Dax_Processor():
         ### save attributes
         for _ch, _im in zip(self.channels, splitted_ims):
             setattr(self, f"im_{_ch}", _im)
-        
         return
     
     def correct_image(self, sel_channels=None):
@@ -112,4 +114,12 @@ class Dax_Processor():
                     setattr(self, f'im_{ch}', warped_im)
                     if self.verbose:
                         print(f'-----Finished chromatic aberration correction for channel {ch}')
+        
+        # correct by microscope parameters
+        if self.microscope_params is not None:
+            for ch in sel_channels:
+                _correct_image = correct_image3D_by_microscope_param(getattr(self, f'im_{ch}'), self.microscope_params)
+                setattr(self, f"im_{ch}", _correct_image)
+                print(f'-----Finished microscope correction for channel {ch}')
+        
         return
