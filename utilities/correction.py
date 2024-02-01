@@ -46,12 +46,13 @@ def correct_chromatic_aberration(im, chromatic_file_path):
     _coords = np.stack(_coords).transpose((0, 2, 1, 3))
     # warp coordinates
     _coords = _coords + chromatic_npy
+    del chromatic_npy
     # map coordinates
     warped_im = map_coordinates(im, 
                                 _coords.reshape(_coords.shape[0], -1),
                                 mode='nearest').astype(im.dtype)
     warped_im = warped_im.reshape(im.shape)
-
+    del _coords
     return warped_im
 
 def correct_bleedthrough(ims, bleedthrough_file, rescale=True):

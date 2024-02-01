@@ -114,8 +114,9 @@ def SpotDNA():
     # load DNA mask and calculate the expected number of pots
     dna_dapi_mask = np.load(args.segment_file)
     num_cells = len(np.unique(dna_dapi_mask)) - 1
-    max_num_seed = int(num_cells*parameters['expected_spots_per_cell']*4)
-    min_num_seed = int(num_cells*parameters['expected_spots_per_cell']*2)
+    max_num_seed = int(num_cells*parameters['expected_spots_per_cell']*3)
+    min_num_seed = int(num_cells*parameters['expected_spots_per_cell']*1)
+    print(f'-Expected {min_num_seed} number of spots for {args.fov}')
 
     # load microscope parameter dictionary
     if hasattr(args, 'microscope_file') and args.microscope_file is not None:
@@ -214,12 +215,15 @@ def SpotDNA():
 
             ### use color to find images: 
             im = getattr(dax_cls, f'im_{color}')
-            
+
+            # shift the segment
+            from scipy.ndimage import shift
+            shifted_segment = shift(dna_dapi_mask, -np.array(drift), mode='constant', cval=0)
             ### generate seed
             seeds = fitting.get_seeds(im, max_num_seeds=max_num_seed, 
                                       th_seed=parameters['seed_threshold'][color], 
                                       min_dynamic_seeds=min_num_seed,
-                                      segment=dna_dapi_mask)
+                                      segment=shifted_segment)
             print(f"-----{len(seeds)} seeded with th={parameters['seed_threshold'][color]} in channel {color} for round {round_name}", flush=True)
             if len(seeds)>0:
                 ### fitting
@@ -237,7 +241,17 @@ def SpotDNA():
                 spots = spots[np.where(_kept_flags)[0]]
                 print(f"-----{len(spots)} found in channel {color} in round {round_name}", flush=True)
                 
-                ### shift the spots
+                ### generate shift function by chromatic abberation
+                if ('chromatic_constant' in correction_dict.keys()):
+                    if str(color) in correction_dict['chromatic_constant'].keys():
+                        chromatic_function = alignment.generate_chromatic_function(correction_dict['chromatic_constant'][str(color)])
+                        # need to get the coordinates that reverse by microscope parameters
+                        microscope_translated_spots = alignment.reverse_microscope_translation_spot(spots, microscope_dict)
+                        new_spots = chromatic_function(microscope_translated_spots)
+                        # change back by microscope parameters
+                        spots = alignment.microscope_translation_spot(new_spots, microscope_dict)
+                
+                # apply drift
                 spots = alignment.shift_spots(spots, drift)
             else:
                 spots = []
