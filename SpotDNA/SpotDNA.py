@@ -200,6 +200,11 @@ def SpotDNA():
         else:
             print(f'---No drift calculation for reference round', flush=True)
             drift, drift_flag = [0,0,0], 'Reference image'
+        # release RAM
+        del fiducial_image
+        # shift the segment
+        from scipy.ndimage import shift
+        shifted_segment = shift(dna_dapi_mask, -np.array(drift), mode='constant', cval=0)
 
         #### start spot finding
         print(f'---Start spot finding for round {round_name}', flush=True)
@@ -213,9 +218,6 @@ def SpotDNA():
                             print(f'---Spot information for bit {bit} already exists.', flush=True)
                             continue
 
-            # shift the segment
-            from scipy.ndimage import shift
-            shifted_segment = shift(dna_dapi_mask, -np.array(drift), mode='constant', cval=0)
             ### generate seed
             seeds = fitting.get_seeds(getattr(dax_cls, f'im_{color}'), max_num_seeds=max_num_seed, 
                                       th_seed=parameters['seed_threshold'][color], 
@@ -225,6 +227,8 @@ def SpotDNA():
             if len(seeds)>0:
                 ### fitting
                 fitter = fitting.iter_fit_seed_points(getattr(dax_cls, f'im_{color}'), seeds.T)    
+                # release RAM
+                del seeds
                 # fit
                 fitter.firstfit()
                 # check
@@ -247,6 +251,10 @@ def SpotDNA():
                         new_spots = chromatic_function(microscope_translated_spots)
                         # change back by microscope parameters
                         spots = alignment.microscope_translation_spot(new_spots, microscope_dict)
+                        # release RAM
+                        del microscope_translated_spots
+                        del new_spots
+                        del chromatic_function
                 
                 # apply drift
                 spots = alignment.shift_spots(spots, drift)
@@ -264,6 +272,9 @@ def SpotDNA():
                 bit_info.create_dataset('spots', data=spots)
                 print(f"---Spots for bit {bit} stored in hdf5 file", flush=True)
             
+            # release RAM
+            del spots
+
         print(f'-Finish analyzing images for round {round_name}.\n', flush=True)
     
     return
