@@ -276,5 +276,8 @@ def SpotDNA():
             del spots
 
         print(f'-Finish analyzing images for round {round_name}.\n', flush=True)
-    
+        # release RAM
+        del dax_cls
+        del shifted_segment
+
     return
