@@ -213,21 +213,18 @@ def SpotDNA():
                             print(f'---Spot information for bit {bit} already exists.', flush=True)
                             continue
 
-            ### use color to find images: 
-            im = getattr(dax_cls, f'im_{color}')
-
             # shift the segment
             from scipy.ndimage import shift
             shifted_segment = shift(dna_dapi_mask, -np.array(drift), mode='constant', cval=0)
             ### generate seed
-            seeds = fitting.get_seeds(im, max_num_seeds=max_num_seed, 
+            seeds = fitting.get_seeds(getattr(dax_cls, f'im_{color}'), max_num_seeds=max_num_seed, 
                                       th_seed=parameters['seed_threshold'][color], 
                                       min_dynamic_seeds=min_num_seed,
                                       segment=shifted_segment)
             print(f"-----{len(seeds)} seeded with th={parameters['seed_threshold'][color]} in channel {color} for round {round_name}", flush=True)
             if len(seeds)>0:
                 ### fitting
-                fitter = fitting.iter_fit_seed_points(im, seeds.T)    
+                fitter = fitting.iter_fit_seed_points(getattr(dax_cls, f'im_{color}'), seeds.T)    
                 # fit
                 fitter.firstfit()
                 # check
@@ -237,7 +234,7 @@ def SpotDNA():
                 spots = spots[np.sum(np.isnan(spots),axis=1)==0] # remove NaNs
                 # remove all boundary points
                 _kept_flags = (spots[:,1:4] > np.zeros(3)).all(1) \
-                    * (spots[:, 1:4] < np.array(np.shape(im))).all(1)
+                    * (spots[:, 1:4] < np.array(imageSize)).all(1)
                 spots = spots[np.where(_kept_flags)[0]]
                 print(f"-----{len(spots)} found in channel {color} in round {round_name}", flush=True)
                 
