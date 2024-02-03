@@ -369,7 +369,7 @@ def closest_faster(xyz,ic,tree,rsearch = 6):
 
 class iter_fit_seed_points():
     def __init__(self,im,centers,radius_fit=5,min_delta_center=1.,max_delta_center=2.5,
-                 n_max_iter = 10,max_dist_th=0.1,
+                 n_max_iter = 10, max_dist_th=0.1,
                  min_w=0.5, max_w=4, init_w=1.5):
         """
         Given a set of seeds <centers> in a 3d image <im> iteratively 3d gaussian fit around the seeds (in order of brightness) 
