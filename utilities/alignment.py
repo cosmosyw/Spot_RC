@@ -127,7 +127,6 @@ def align_image(
         # calculate drift with autocorr
         _dft, _error, _phasediff = phase_cross_correlation(_rim, _sim, 
                                                                upsample_factor=precision_fold)
-        
         # append if the drift calculated pass certain criteria
         if (len(np.where(np.abs(_dft)>drift_pixel_threshold)[0])==0) & (len(np.where(_dft==0)[0])<=1) & (np.abs(_dft)[0]<z_drift_threshold):
             _drifts.append(_dft) 
@@ -142,10 +141,15 @@ def align_image(
                 _result_flag = 'Optimal alignment'
                 break
     
+    # if no good drift and just one good drift is detected. Do it on the entire image
     if len(_drifts)==0:
-        return [0,0,0], 'Failed alignment'
+        _dft, _error, _phasediff = phase_cross_correlation(ref_im, src_im, 
+                                                               upsample_factor=precision_fold)
+        return _dft, 'Failed alignment'
     elif len(_drifts)==1:
-        return _drifts[0], 'Poor alignment'
+        _dft, _error, _phasediff = phase_cross_correlation(ref_im, src_im, 
+                                                               upsample_factor=precision_fold)
+        return _dft, 'Poor alignment'
 
     if '_updated_mean_dft' not in locals():
         _drifts = np.array(_drifts)

@@ -112,11 +112,15 @@ def SpotDNA():
     parameters = pickle.load(open(args.parameter_file, 'rb'))
 
     # load DNA mask and calculate the expected number of pots
-    dna_dapi_mask = np.load(args.segment_file)
-    num_cells = len(np.unique(dna_dapi_mask)) - 1
-    max_num_seed = int(num_cells*parameters['expected_spots_per_cell']*3)
-    min_num_seed = int(num_cells*parameters['expected_spots_per_cell']*1)
-    print(f'-Expected {min_num_seed} number of spots for {args.fov}')
+    if os.path.exists(args.segment_file):
+        dna_dapi_mask = np.load(args.segment_file)
+        num_cells = len(np.unique(dna_dapi_mask)) - 1
+        max_num_seed = int(num_cells*parameters['expected_spots_per_cell']*2)
+        min_num_seed = int(num_cells*parameters['expected_spots_per_cell']*1)
+        print(f'-Expected {min_num_seed} number of spots for {args.fov}')
+    else:
+        raise ValueError('Segmentation files does not exist!')
+     
 
     # load microscope parameter dictionary
     if hasattr(args, 'microscope_file') and args.microscope_file is not None:
